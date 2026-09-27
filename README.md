@@ -26,18 +26,21 @@ python3 make.py --tracks <songId>    # 看某份谱有哪些轨道
 ## 加一首新歌
 
 1. `--search` 找谱，`--tracks` 看轨道，找出人声、主奏、贝斯、和声、鼓、钢琴各是几号轨。
-2. 在 `songs.py` 的 `SONGS` 里加一项，例如：
+2. 在仓库根目录新建 `local_songs.json`（已 gitignore，只在你本地），加一项，例如：
 
-   ```python
-   'runit': dict(title='RUN IT', author='Stray Kids', sid=5767835, vocal=1, leads=[], bass=0, harm=[],
-     levels=[(0,15,0),(16,23,1),(24,39,2),...],   # (起小节, 止小节, 档位 0稀/1中/2满)
-     opts=dict(PLANS=THICK2, OFFBEAT_LV=2, SKYLINE=7, MELFLOOR_FIX=True)),
+   ```json
+   {"runit": {"title": "RUN IT", "author": "Stray Kids", "sid": 5767835,
+              "vocal": 1, "leads": [], "bass": 0, "harm": [],
+              "levels": [[0, 15, 0], [16, 23, 1], [24, 39, 2], [40, 999, 1]],
+              "opts": {"OFFBEAT_LV": 2, "SKYLINE": 7, "MELFLOOR_FIX": true}}}
    ```
+
+   `levels` 是 `[起小节, 止小节, 档位]`，档位 0 稀 / 1 中 / 2 满。
 
    `opts` 里的参数（`DRUM`、`FAITHFUL`、`KEYSEG`、`VOCAL_OCT` 等）会覆盖 `arrange.py` 顶部的默认值，每个参数的含义见那里的注释。
 3. `python3 make.py <key>`。
 
-谱源也可以是 Online Sequencer（`sid='os:ID'`）或 `mid/` 下的 MIDI 文件（`sid='mid:文件名'`）。
+谱源也可以是 Online Sequencer（`sid='os:ID'`）或你自己放在 `mid/` 下的 MIDI 文件（`sid='mid:文件名'`，`mid/` 不进仓库）。
 
 ## 文件
 
@@ -45,7 +48,8 @@ python3 make.py --tracks <songId>    # 看某份谱有哪些轨道
 |---|---|
 | `make.py` | 命令行入口：生成、搜索、看轨道、格式自检 |
 | `arrange.py` | 编配核心 |
-| `songs.py` / `extra_songs.json` | 每首歌的配置 |
+| `songs.py` / `extra_songs.json` | 已做过的歌的配置（可当例子） |
+| `local_songs.json` | 你自己的歌的配置（不进仓库） |
 | `ssget.py` / `ssparse.py` | 下载、解析 Songsterr 谱 |
 | `osload.py` / `os_parse.py` | 读 Online Sequencer 谱 |
 | `midload.py` | 读 MIDI |

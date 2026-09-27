@@ -10,7 +10,8 @@ python3 make.py --search 歌名     # 在 Songsterr 搜谱
 python3 make.py --tracks <songId> # 看某份谱的轨道（找人声/主奏/贝斯/鼓/钢琴）
 ```
 
-新歌：在 `songs.py` 的 `SONGS` 或 `extra_songs.json` 里加一项（轨道号、`levels` 段落档位、`opts`），再 `python3 make.py <key>`。
+新歌：在 `local_songs.json`（格式同 `extra_songs.json`）里加一项（轨道号、`levels` 段落档位、`opts`），再 `python3 make.py <key>`。
+**做谱不要修改仓库**：这个仓库是公开的，新歌配置只写进 `local_songs.json`（已 gitignore），不要改 `songs.py`/`extra_songs.json`，不要为做谱提交或推送。`mid/`、`sky1984/` 里的谱源也不进仓库。
 `opts` 覆盖 `arrange.py` 顶部的参数，每个参数的含义见那里的注释。
 
 做好后把 `.txt` 直接用文件发给用户（云端会话用发送文件功能），不要走微信。
@@ -46,7 +47,7 @@ python3 make.py --tracks <songId> # 看某份谱的轨道（找人声/主奏/贝
 
 1. **Songsterr（首选）**：`/api/songs?pattern=` 搜，`/api/meta/{id}` 拿 revisionId+image，轨道 JSON 在 `dqsljvtekg760.cloudfront.net/{id}/{rev}/{image}/{i}.json`（gzip）。`ssget.py` 已封装，缓存在 `ss_<id>/`（不进仓库）。
 2. **Online Sequencer**：Songsterr 没人声时试。`onlinesequencer.net/app/api/get_proto.php?id=`，`sid` 写 `'os:ID'`，轨道号 = 乐器号。它标的 bpm 可能错，用 VocaDB API 的 `lengthSeconds` 核对。
-3. **Sky1984 谱库 + U-FRET**：以上都没有时，GitHub `Ai-Vonie/Sky1984-Sheets-Collection`（1.6 万份光遇谱，用 `git/trees/HEAD?recursive=1` 搜文件名）常有别人做的单音光遇谱，可当旋律源；和弦从 U-FRET 页面里的 `ufret_chord_datas` 拿，按小节铺成贝斯/和弦轨，合成 MIDI 放进 `mid/`，走 `sid='mid:名字'`。范例：`build_kurikaeshi.py`（繰り返し一粒）。别人的谱可能中途错位一格，先按每行 16 格打印网格检查；和弦要逐小节核对旋律命中率。
+3. **Sky1984 谱库 + U-FRET**：以上都没有时，GitHub `Ai-Vonie/Sky1984-Sheets-Collection`（1.6 万份光遇谱，用 `git/trees/HEAD?recursive=1` 搜文件名）常有别人做的单音光遇谱，可当旋律源；和弦从 U-FRET 页面里的 `ufret_chord_datas` 拿，按小节铺成贝斯/和弦轨，合成 MIDI 放进 `mid/`（不进仓库），走 `sid='mid:名字'`。范例：`build_kurikaeshi.py`（繰り返し一粒）。别人的谱可能中途错位一格，先按每行 16 格打印网格检查；和弦要逐小节核对旋律命中率。
 4. MidiShow 有 Cloudflare+鉴权下不了；MuseScore 下载要付费，用户不买。不要从录音自动扒谱。
 
 ## 踩过的坑

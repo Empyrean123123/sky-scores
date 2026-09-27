@@ -9,3 +9,7 @@ output/
 .DS_Store
 # 别人做的光遇谱(Sky1984 谱库)，只作旋律源，不进仓库
 sky1984/
+# 合成的谱源 MIDI(基于有版权的歌)，不进仓库
+mid/
+# 自己做的歌的配置，不进仓库
+local_songs.json

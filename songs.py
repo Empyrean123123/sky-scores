@@ -91,3 +91,8 @@ _p2=_os.path.join(_os.path.dirname(_os.path.abspath(__file__)),'extra_songs.json
 if _os.path.exists(_p2):
     for _k,_c in _json.load(open(_p2)).items():
         SONGS[_k]=_fixjson(_c)
+# 自己做的新歌放 local_songs.json(格式同 extra_songs.json)，不进仓库
+_p3=_os.path.join(_os.path.dirname(_os.path.abspath(__file__)),'local_songs.json')
+if _os.path.exists(_p3):
+    for _k,_c in _json.load(open(_p3,encoding='utf-8')).items():
+        SONGS[_k]=_fixjson(_c)
