@@ -1,0 +1,9 @@
+# Songsterr / Online Sequencer 缓存：可重新下载，且是第三方谱数据
+ss_*/
+os/
+# 中间产物
+.out_*
+__pycache__/
+output/
+黒のバースデイ.txt
+.DS_Store
