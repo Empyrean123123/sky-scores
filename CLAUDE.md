@@ -36,7 +36,11 @@ python3 make.py --tracks <songId> # 看某份谱的轨道（找人声/主奏/贝
 ## 标准做法
 
 - **教科书是 Neo-Aspect**（Songsterr 6948261）：人声/主奏/节奏/贝斯/鼓五轨完整，主唱白键 100%，`PLANS=THICK2` + 鼓齐奏停顿 + 鼓加花，不开鼓律动。新歌以它为标准。
-- 用户认可的参照：Neo-Aspect（标准流程）、黒のバースデイ（钢琴叠加 `FAITHFUL_PLUS`）、少女A（鼓律动）、メギツネ。
+- 用户认可的参照：Neo-Aspect（标准流程）、黒のバースデイ（钢琴叠加 `FAITHFUL_PLUS`）、少女A（鼓律动）、メギツネ、携帯恋話、六兆年と一夜物語（钢琴版，用户评价「写得非常好」）。
+- **术力口（VOCALOID/UTAU/SynthV 曲）**：按六兆年、少女A、携帯恋話的路子做。
+  1. 先找这首的**钢琴编曲**（Online Sequencer 搜钢琴版 / 谱源里的钢琴轨 / 用户给的 MIDI），有就像六兆年那样整首如实照搬：`sid='os:ID', vocal=钢琴, bass=钢琴, harm=[钢琴], PLANS={0:{},1:{},2:{}}, OFFBEAT_LV=9, VOCAL_TOP=True, FAITHFUL=[钢琴], FAITHFUL_NOBASS=True`，`OS_BPM` 用 VocaDB 时长核对。六兆年的来源是 OS 1905900（单轨钢琴，186bpm）。
+  2. 没有钢琴编曲再走乐队做法：`THICK2` + `DRUM` + `DRUMFILL`，另出一份「(鼓律动版)」开 `DRUM_GROOVE=True, GROOVE_THICK=1`（少女A 路子）让用户对比选。
+  3. 分档照认可歌：前奏 0→1、主歌 0、pre-chorus 1、副歌 2、间奏 1、停顿 0、尾奏 1。
 - 「只留主唱+钢琴」（Fabulous）是用户对那首 chill 曲的单独要求，**不是通用做法**。
 - 编配：人声 = 右手旋律，只在长空档（≥4 拍）用主奏补；伴奏 = 贝斯根音 + 从和声轨统计的和弦，放在旋律下方。
 - 新歌开 `MELFLOOR_FIX=True`；人声太低就按段落升八度（`VOCAL_OCT`）；有转调用 `KEYSEG` 分段移调。
