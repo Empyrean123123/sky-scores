@@ -1,8 +1,10 @@
 """繰り返し一粒：Songsterr/OS 都没有。旋律用 Sky1984 谱库里 DB 扒的单音光遇谱(全曲)，
 和弦用 U-FRET(Dm 调，结尾升半音那段按同级数处理)，合成 mid/kurikaeshi.mid：
 track0=主唱(DB 旋律) track1=贝斯根音 track2=和弦。之后 python3 make.py kurikaeshi"""
-import json,struct,sys
-SRC='sky1984/缲り返し一粒.txt'
+import json,struct,sys,os
+SRC='sky1984/缲り返し一粒.txt'   # 别人的谱不随仓库分发，需自己从 Sky1984 谱库下载
+if not os.path.exists(SRC):
+    sys.exit(f'缺少 {SRC}：从 GitHub Ai-Vonie/Sky1984-Sheets-Collection 下载「缲り返し一粒」放到这里')
 MAJOR=[0,2,4,5,7,9,11]
 b=open(SRC,'rb').read()
 for enc in ('utf-8-sig','utf-16'):

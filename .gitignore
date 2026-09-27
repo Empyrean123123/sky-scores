@@ -7,3 +7,5 @@ __pycache__/
 output/
 黒のバースデイ.txt
 .DS_Store
+# 别人做的光遇谱(Sky1984 谱库)，只作旋律源，不进仓库
+sky1984/
