@@ -13,18 +13,18 @@
 :root{
   --bg:#eef1f7; --panel:#ffffff; --ink:#1d2433; --muted:#5d6679; --line:#d7dce8;
   --key:#f7f5ef; --key-edge:#cfd4e2; --glow:#e0a43a; --glow-soft:rgba(224,164,58,.28); --hit:#f3c25e;
-  --accent:#3f5fa8; --accent-ink:#ffffff;
+  --accent:#3f5fa8; --accent-ink:#ffffff; --next:#1f9e94; --next-ink:#ffffff; --lane:#f3f5fa; --row1:#d4697a; --row2:#c9942f; --row3:#4f82cf; --chip-ink:#ffffff;
   --display:"Zen Maru Gothic","Noto Sans SC",system-ui,sans-serif;
   --body:"Noto Sans SC",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#101827; --panel:#172236; --ink:#e8ecf5; --muted:#9aa5bd; --line:#2a3852;
   --key:#1f2c45; --key-edge:#34466a; --glow:#f0b44c; --glow-soft:rgba(240,180,76,.25); --hit:#f6cf7a;
-  --accent:#8fb0ff; --accent-ink:#0f1726; color-scheme:dark}}
+  --accent:#8fb0ff; --accent-ink:#0f1726; --next:#43cdbf; --next-ink:#0f1726; --lane:#121c2e; --row1:#f08a9a; --row2:#f0bf5a; --row3:#7fa9f2; --chip-ink:#0f1726; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#101827; --panel:#172236; --ink:#e8ecf5; --muted:#9aa5bd; --line:#2a3852;
   --key:#1f2c45; --key-edge:#34466a; --glow:#f0b44c; --glow-soft:rgba(240,180,76,.25); --hit:#f6cf7a;
-  --accent:#8fb0ff; --accent-ink:#0f1726; color-scheme:dark}
+  --accent:#8fb0ff; --accent-ink:#0f1726; --next:#43cdbf; --next-ink:#0f1726; --lane:#121c2e; --row1:#f08a9a; --row2:#f0bf5a; --row3:#7fa9f2; --chip-ink:#0f1726; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55}
 .wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:24px 40px;display:flex;flex-direction:column;gap:20px}
@@ -44,14 +44,19 @@ button.primary{background:var(--accent);color:var(--accent-ink);border-color:var
 button[aria-pressed="true"]{background:var(--glow-soft);border-color:var(--glow)}
 .btn input{position:absolute;opacity:0;width:1px;height:1px}
 .stage{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px 16px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.lane{display:block;width:100%;height:150px;border-radius:14px;background:var(--lane);border:1px solid var(--line)}
 .keys{display:grid;grid-template-columns:repeat(5,1fr);gap:clamp(8px,2.2vw,16px);width:100%;max-width:520px}
 .key{position:relative;aspect-ratio:1;max-width:100%;border-radius:22%;background:var(--key);border:1.5px solid var(--key-edge);display:grid;place-items:center;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:manipulation;transition:background .12s}
 .key svg{width:44%;height:44%;opacity:.55}
 .key .lbl{position:absolute;bottom:6%;font-size:.7rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .key .ring{position:absolute;inset:-2px;border-radius:24%;border:3px solid var(--glow);opacity:0;pointer-events:none}
-.key.on{background:var(--hit)}
 .key.on svg{opacity:1}
-.key.want{box-shadow:0 0 0 3px var(--glow) inset}
+.key.next{background:var(--next);border-color:var(--next);color:var(--next-ink)}
+.key.next svg{opacity:1}
+.key.next .lbl{color:var(--next-ink);font-weight:700}
+.key.done{background:var(--next);border-color:var(--next);opacity:.35}
+.key.soon{border:3px dashed var(--next)}
+.key.on{background:var(--hit);opacity:1}
 .hint{color:var(--muted);font-size:.82rem;text-align:center;margin:0}
 .transport{display:flex;flex-direction:column;gap:12px}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -85,8 +90,9 @@ label.inline{display:flex;align-items:center;gap:8px;color:var(--muted);font-siz
   <p class="err" id="err" hidden></p>
 
   <section class="stage" aria-label="琴键">
+    <canvas class="lane" id="lane" aria-label="滚动谱面：音符向左滚到圆圈时按下"></canvas>
     <div class="keys" id="keys"></div>
-    <p class="hint">光环收缩到琴键边缘时按下。电脑键盘：Y U I O P / H J K L ; / N M , . /</p>
+    <p class="hint">谱面上的音符滚进左边圆圈、或琴键光环收缩到边缘时按下；音符上写的就是要按的键，颜色对应琴键的上/中/下排。电脑键盘：Y U I O P / H J K L ; / N M , . /</p>
   </section>
 
   <section class="transport" aria-label="播放控制">
@@ -111,7 +117,7 @@ label.inline{display:flex;align-items:center;gap:8px;color:var(--muted);font-siz
       <span class="loopinfo" id="loopInfo">未设置循环</span>
     </div>
     <p class="hint" style="text-align:left">钢琴音色：Salamander Grand Piano（Alexander Holm，CC BY 3.0）。</p>
-    <p class="hint" style="text-align:left">等待模式：播到每个音都会停下，等你按对了才继续，适合一句一句练。只看主旋律：每个时刻只保留最高的那个键，大致就是主唱旋律。</p>
+    <p class="hint" style="text-align:left">等待模式：播到每个音都会停下，等你按对了才继续，适合一句一句练。青色的键是现在要按的，按对的会变暗，青色虚线框是下一组要按的。只看主旋律：每个时刻只保留最高的那个键，大致就是主唱旋律。</p>
   </section>
 </div>
 
@@ -191,7 +197,8 @@ function flash(k){const el=keyEls[k];el.classList.add('on');clearTimeout(el._t);
 
 function press(k){tone(k);flash(k);
   if(waitMode&&playing&&nextIdx<shown.length&&shown[nextIdx].t<=pos+1&&shown[nextIdx].keys.includes(k)){pressedSet.add(k);
-    if(shown[nextIdx].keys.every(x=>pressedSet.has(x))){pressedSet.clear();nextIdx++}}}
+    if(shown[nextIdx].keys.every(x=>pressedSet.has(x))){pressedSet.clear();nextIdx++}}
+  if(waitMode)paint()}
 
 function tick(ts){
   if(!playing)return;
@@ -204,12 +211,43 @@ function tick(ts){
   else if(pos>=dur()&&nextIdx>=shown.length){stop();seekTo(0)}
   paint();requestAnimationFrame(tick);
 }
+
+// 太鼓式滚动谱面：音符从右往左滚到判定圈
+const lane=$('lane'),lctx=lane.getContext('2d');let LW=0,LH=0;
+function sizeLane(){const r=lane.getBoundingClientRect(),dpr=window.devicePixelRatio||1;LW=r.width;LH=r.height;lane.width=Math.round(LW*dpr);lane.height=Math.round(LH*dpr);lctx.setTransform(dpr,0,0,dpr,0,0);drawLane()}
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function chip(x,y,w,h,r){lctx.beginPath();if(lctx.roundRect)lctx.roundRect(x,y,w,h,r);else lctx.rect(x,y,w,h)}
+function drawLane(){
+  if(!LW)return;
+  const C={hit:cssv('--glow'),next:cssv('--next'),line:cssv('--line'),muted:cssv('--muted'),ink:cssv('--chip-ink'),nink:cssv('--next-ink'),row:[cssv('--row1'),cssv('--row2'),cssv('--row3')]};
+  lctx.clearRect(0,0,LW,LH);
+  const X0=Math.min(64,LW*0.14),PX=0.34,CW=28,CH=Math.min(24,(LH-20)/5-3),R=LH/2-8;
+  lctx.strokeStyle=C.line;lctx.lineWidth=1;lctx.beginPath();lctx.moveTo(X0,LH/2);lctx.lineTo(LW,LH/2);lctx.stroke();
+  lctx.strokeStyle=C.hit;lctx.lineWidth=3;lctx.beginPath();lctx.arc(X0,LH/2,Math.min(R,CW),0,Math.PI*2);lctx.stroke();
+  lctx.font='700 13px '+getComputedStyle(document.body).fontFamily;lctx.textAlign='center';lctx.textBaseline='middle';
+  let lo=0,hi=shown.length;while(lo<hi){const m=(lo+hi)>>1;if(shown[m].t<pos-400)lo=m+1;else hi=m}
+  let last=lo;while(last<shown.length&&X0+(shown[last].t-pos)*PX<=LW+CW)last++;
+  for(let i=last-1;i>=lo;i--){const g=shown[i],x=X0+(g.t-pos)*PX;
+    const ks=[...g.keys].sort((a,b)=>a-b),n=ks.length,tot=n*CH+(n-1)*3;let y=LH/2-tot/2;
+    const past=waitMode?i<nextIdx:g.t<pos-20, cur=waitMode&&i===nextIdx;
+    for(const k of ks){const row=(k/5)|0;lctx.globalAlpha=past?0.25:(cur&&pressedSet.has(k)?0.35:1);
+      lctx.fillStyle=cur?C.next:C.row[row];chip(x-CW/2,y,CW,CH,6);lctx.fill();
+      lctx.fillStyle=cur?C.nink:C.ink;lctx.fillText(PCKEYS[k].toUpperCase(),x,y+CH/2+0.5);y+=CH+3}}
+  lctx.globalAlpha=1;
+  if(!shown.length){lctx.fillStyle=C.muted;lctx.fillText('导入琴谱后，音符会从右边滚过来',LW/2,LH/2)}
+}
+if(window.ResizeObserver)new ResizeObserver(sizeLane).observe(lane);else window.addEventListener('resize',sizeLane);
 function paint(){
   const ahead=new Map();
   for(let i=nextIdx;i<shown.length&&shown[i].t-pos<LOOK;i++)for(const k of shown[i].keys)if(!ahead.has(k))ahead.set(k,shown[i].t-pos);
+  // 等待模式：当前这一组要按的键填色，下一组画虚线框
+  const cur=waitMode&&nextIdx<shown.length?shown[nextIdx].keys:[], nxt=waitMode&&nextIdx+1<shown.length?shown[nextIdx+1].keys:[];
   keyEls.forEach((el,k)=>{const r=el.children[1];const d=ahead.get(k);
     if(d===undefined){r.style.opacity=0;el.classList.remove('want')}
-    else{const p=Math.max(0,d)/LOOK;r.style.opacity=(1-p*0.8).toFixed(2);r.style.transform='scale('+(1+p*0.55).toFixed(3)+')';el.classList.toggle('want',waitMode&&d<=1)}});
+    else{const p=Math.max(0,d)/LOOK;r.style.opacity=(1-p*0.8).toFixed(2);r.style.transform='scale('+(1+p*0.55).toFixed(3)+')'}
+    const inCur=cur.includes(k);
+    el.classList.toggle('next',inCur&&!pressedSet.has(k));el.classList.toggle('done',inCur&&pressedSet.has(k));el.classList.toggle('soon',!inCur&&nxt.includes(k))});
+  drawLane();
   $('time').textContent=fmt(pos)+' / '+fmt(dur());
   if(document.activeElement!==$('seek'))$('seek').value=Math.round(pos);
 }
