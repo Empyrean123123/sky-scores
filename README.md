@@ -42,6 +42,17 @@ python3 make.py --tracks <songId>    # 看某份谱有哪些轨道
 
 谱源也可以是 Online Sequencer（`sid='os:ID'`）或你自己放在 `mid/` 下的 MIDI 文件（`sid='mid:文件名'`，`mid/` 不进仓库）。
 
+## 练琴网页
+
+`practice/index.html` 是一个手弹练习页面：导入生成的 `.txt` 琴谱，按光遇 3×5 键位显示提示（光环收缩到琴键边缘时按下）并放出琴声，可以调速、AB 段循环、等待模式（按对了才往下走）、只看主旋律。电脑键盘键位同光遇 PC 版默认：`Y U I O P / H J K L ; / N M , . /`。只在浏览器本地读取文件，不联网上传，也不和游戏交互。
+
+```bash
+cd practice && python3 -m http.server 8000
+# 浏览器打开 http://localhost:8000
+```
+
+也可以直接双击 `practice/index.html` 打开。
+
 ## 文件
 
 | 文件 | 作用 |
@@ -54,6 +65,7 @@ python3 make.py --tracks <songId>    # 看某份谱有哪些轨道
 | `osload.py` / `os_parse.py` | 读 Online Sequencer 谱 |
 | `midload.py` | 读 MIDI |
 | `template.txt` | 输出格式模板 |
+| `practice/index.html` | 手弹练习网页 |
 
 ## 说明
 
