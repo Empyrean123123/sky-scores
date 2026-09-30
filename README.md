@@ -44,7 +44,7 @@ python3 make.py --tracks <songId>    # 看某份谱有哪些轨道
 
 ## 练琴网页
 
-`practice/index.html` 是一个手弹练习页面：导入生成的 `.txt` 琴谱，按光遇 3×5 键位显示提示（光环收缩到琴键边缘时按下）并放出琴声，可以调速、AB 段循环、等待模式（按对了才往下走）、只看主旋律。电脑键盘键位同光遇 PC 版默认：`Y U I O P / H J K L ; / N M , . /`。只在浏览器本地读取文件，不联网上传，也不和游戏交互。
+`practice/index.html` 是一个手弹练习页面：导入生成的 `.txt` 琴谱，按光遇 3×5 键位显示提示（光环收缩到琴键边缘时按下）并放出琴声，可以调速、AB 段循环、等待模式（按对了才往下走）、只看主旋律。电脑键盘键位同光遇 PC 版默认：`Y U I O P / H J K L ; / N M , . /`。只在浏览器本地读取文件，不联网上传，也不和游戏交互。钢琴音色是内嵌的 Salamander Grand Piano 采样（Alexander Holm，CC BY 3.0），离线也能用。
 
 ```bash
 cd practice && python3 -m http.server 8000
