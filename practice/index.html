@@ -157,7 +157,7 @@ label.ghost input{position:absolute;opacity:0;width:1px;height:1px}
     <div class="row"><button id="sound" aria-pressed="true">声音开</button></div>
     <div class="row"><button id="setA">设 A 点</button><button id="setB">设 B 点</button><button id="clearAB">取消循环</button></div>
     <p id="loopInfo">未设置循环。播到难的那句开头点 A、结尾点 B，就会反复播这一句。</p>
-    <p>等待模式：每组音都停下来，等你按对才继续。金色发光的是现在要按的键，按对的会变暗，金色虚线框是下一组。</p>
+    <p>等待模式：每组音都停下来，等你按对才继续；提前半秒以内按对也算，和弦可以分开按齐。金色发光的是现在要按的键，按对的会变暗，金色虚线框是下一组。</p>
     <p>只看主旋律：每个时刻只保留最高的那个键，大致就是主唱旋律。</p>
     <p>空格键：播放 / 暂停。</p>
   </section>
@@ -231,7 +231,7 @@ function sample(){const q=500,bar=(ks,bass)=>({ks,bass});
   return {name:'欢乐颂',author:'Beethoven',pitchLevel:0,notes:n,sample:true}}
 let song=sample(),groups=[],shown=[];
 let ctx=null,master=null,playing=false,pos=0,lastTs=0,speed=1,waitMode=false,melodyOnly=false,soundOn=true,A=null,B=null,nextIdx=0,pressedSet=new Set();
-const LOOK=1100;
+const LOOK=1100, EARLY=500;   // 等待模式：音符到达前 500ms（曲谱时间）内按对就算
 const fmt=ms=>{const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
 const dur=()=>groups.length?groups[groups.length-1].t:0;
 function build(){
@@ -263,7 +263,7 @@ function tone(k,vol=0.5){if(!soundOn||!audio())return;loadPiano();const t=ctx.cu
   [[1,'triangle',1],[2,'sine',0.35],[3,'sine',0.12]].forEach(([mm,type,a])=>{const o=ctx.createOscillator(),og=ctx.createGain();o.type=type;o.frequency.value=f*mm;og.gain.value=a;o.connect(og).connect(g);o.start(t);o.stop(t+1.7)})}
 function flash(k){const el=keyEls[k].el;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),170)}
 function press(k){tone(k);flash(k);
-  if(waitMode&&playing&&nextIdx<shown.length&&shown[nextIdx].t<=pos+1&&shown[nextIdx].keys.includes(k)){pressedSet.add(k);
+  if(waitMode&&nextIdx<shown.length&&shown[nextIdx].t-pos<=EARLY&&shown[nextIdx].keys.includes(k)){pressedSet.add(k);
     if(shown[nextIdx].keys.every(x=>pressedSet.has(x))){pressedSet.clear();nextIdx++}}
   if(waitMode)paint()}
 
