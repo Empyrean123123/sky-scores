@@ -147,6 +147,8 @@ label.ghost input{position:absolute;opacity:0;width:1px;height:1px}
   <section>
     <h3>练习</h3>
     <div class="row"><button id="sound" aria-pressed="true">声音开</button></div>
+    <label class="speed" for="zoom">谱面缩放 <input type="range" id="zoom" min="50" max="200" step="10" value="100"> <span id="zoomV">100%</span></label>
+    <p>谱面上的音符太挤就调大，太稀就调小。导入琴谱时会按这首歌最密的地方自动拉开间距。</p>
     <div class="row"><button id="setA">设 A 点</button><button id="setB">设 B 点</button><button id="clearAB">取消循环</button></div>
     <p id="loopInfo">未设置循环。播到难的那句开头点 A、结尾点 B，就会反复播这一句。</p>
     <p>等待模式：每组音都停下来，等你按对才继续；提前半秒以内按对也算，和弦可以分开按齐。金色发光的是现在要按的键，按对的会变暗，金色虚线框是下一组。</p>
@@ -223,6 +225,8 @@ function sample(){const q=500,bar=(ks,bass)=>({ks,bass});
   return {name:'欢乐颂',author:'Beethoven',pitchLevel:0,notes:n,sample:true}}
 let song=sample(),groups=[],shown=[];
 let ctx=null,master=null,playing=false,pos=0,lastTs=0,speed=1,waitMode=false,melodyOnly=false,soundOn=true,A=null,B=null,nextIdx=0,pressedSet=new Set();
+let basePX=0.25, zoom=1;
+try{const z=+localStorage.getItem('skyPractice.zoom');if(z>=0.5&&z<=2)zoom=z}catch(e){}
 const LOOK=1100, EARLY=500;   // 等待模式：音符到达前 500ms（曲谱时间）内按对就算
 const fmt=ms=>{const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
 const dur=()=>groups.length?groups[groups.length-1].t:0;
@@ -231,6 +235,10 @@ function build(){
   groups=[...by.entries()].sort((a,b)=>a[0]-b[0]).map(([t,s])=>({t,keys:[...s].sort((a,b)=>a-b)}));
   shown=groups.map(g=>({t:g.t,keys:melodyOnly?[g.keys[g.keys.length-1]]:g.keys}));
   $('seek').max=Math.max(1,Math.round(dur()));
+  // 按这首歌最密的段落（相邻两组间隔的第 10 百分位）定滚动速度，保证图标不重叠
+  const gaps=[];for(let i=1;i<shown.length;i++){const d=shown[i].t-shown[i-1].t;if(d>15)gaps.push(d)}
+  gaps.sort((a,b)=>a-b);const p10=gaps.length?gaps[Math.floor(gaps.length*0.1)]:300;
+  basePX=Math.min(0.9,Math.max(0.16,36/p10));
 }
 function showSong(){
   $('title').textContent=song.name;$('artist').textContent=song.author||'—';
@@ -289,7 +297,7 @@ function shape(x,y,s,k,fill){lc.beginPath();const sh=shapeOf(k);
 function drawLane(){if(!LW)return;
   const css=getComputedStyle(document.documentElement),gold=css.getPropertyValue('--gold').trim(),ink='rgba(238,240,244,.9)',muted='rgba(238,240,244,.5)';
   lc.clearRect(0,0,LW,LH);
-  const X0=Math.max(40,LW*0.07),PX=Math.max(0.16,Math.min(0.3,LW/3600)),S=Math.min(12,LH*0.075),GAP=S*2.2,Y=LH-S-34;
+  const X0=Math.max(56,LW*0.08),PX=basePX*zoom,S=Math.min(12,LH*0.075),GAP=S*2.2,Y=LH-S-34;
   lc.strokeStyle='rgba(238,240,244,.14)';lc.lineWidth=1;lc.beginPath();lc.moveTo(0,Y);lc.lineTo(LW,Y);lc.stroke();
   let lo=0,hi=shown.length;while(lo<hi){const m=(lo+hi)>>1;if(shown[m].t<pos-(X0/PX)-200)lo=m+1;else hi=m}
   lc.font='500 12px '+getComputedStyle(document.body).fontFamily;lc.textAlign='center';lc.textBaseline='top';
@@ -298,7 +306,13 @@ function drawLane(){if(!LW)return;
     const past=waitMode?i<nextIdx:g.t<pos-15,cur=waitMode&&i===nextIdx;
     lc.globalAlpha=past?0.22:1;lc.lineWidth=1.5;lc.strokeStyle=cur?gold:ink;lc.shadowBlur=cur?12:0;lc.shadowColor=gold;
     g.keys.forEach((k,j)=>shape(x,Y-j*GAP,S,k,cur?gold:ink));lc.shadowBlur=0;
-    if(x-lastLabelX>14){lc.fillStyle=cur?gold:muted;lc.fillText(g.keys.map(k=>keyName(binds[k])).join(''),x,Y+S+9);lastLabelX=x}}
+    const lbl=g.keys.map(k=>keyName(binds[k])).join(''),w=lc.measureText(lbl).width;
+    if(x-w/2>lastLabelX+4){lc.fillStyle=cur?gold:muted;lc.fillText(lbl,x,Y+S+9);lastLabelX=x+w/2}}
+  // 大字：下一个要按的键（等待模式=当前组；否则=最先到达的那组）
+  let ni=waitMode?nextIdx:shown.findIndex(g=>g.t>=pos-15);
+  if(ni>=0&&ni<shown.length){const g=shown[ni],txt=g.keys.slice().reverse().map(k=>keyName(binds[k])).join(' ');
+    lc.save();lc.globalAlpha=1;lc.textAlign='left';lc.textBaseline='top';lc.fillStyle=muted;lc.font='500 11px '+getComputedStyle(document.body).fontFamily;lc.fillText('下一个',X0+14,6);
+    lc.fillStyle=gold;lc.font='600 28px '+getComputedStyle(document.body).fontFamily;lc.fillText(txt,X0+14,20);lc.restore()}
   lc.globalAlpha=1;
   lc.strokeStyle=gold;lc.lineWidth=1.2;lc.beginPath();lc.moveTo(X0,Y-S-GAP*1.2);lc.lineTo(X0,Y+S+30);lc.stroke();
   lc.fillStyle=gold;lc.beginPath();const ty=Y-S-GAP*1.2;lc.moveTo(X0,ty-5);lc.lineTo(X0+4,ty);lc.lineTo(X0,ty+5);lc.lineTo(X0-4,ty);lc.closePath();lc.fill();
@@ -311,6 +325,8 @@ $('play').onclick=()=>playing?stop():start();
 $('restart').onclick=()=>{seekTo(A??0);if(!playing)start()};
 $('seek').oninput=e=>seekTo(+e.target.value);
 $('speed').oninput=e=>{speed=e.target.value/100;$('speedV').textContent=e.target.value+'%'};
+$('zoom').value=Math.round(zoom*100);$('zoomV').textContent=Math.round(zoom*100)+'%';
+$('zoom').oninput=e=>{zoom=e.target.value/100;$('zoomV').textContent=e.target.value+'%';try{localStorage.setItem('skyPractice.zoom',zoom)}catch(_){}drawLane()};
 const toggle=(id,fn)=>{const b=$(id);b.onclick=()=>{const v=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',v);fn(v,b)}};
 toggle('wait',v=>{waitMode=v;pressedSet.clear();paint()});
 toggle('melody',v=>{melodyOnly=v;build();seekTo(pos)});
