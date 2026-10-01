@@ -29,13 +29,8 @@ body{margin:0;background:radial-gradient(120% 90% at 70% 30%,var(--bg1) 0%,var(-
 .app{position:relative;z-index:1;min-height:100%;max-width:1480px;margin:0 auto;padding-inline:clamp(16px,5vw,96px);padding-block:clamp(20px,5vh,64px) 24px;display:flex;flex-direction:column;gap:clamp(18px,4vh,48px)}
 .top{display:flex;gap:clamp(20px,3vw,44px);align-items:flex-start;flex-wrap:wrap}
 .info{display:flex;gap:clamp(16px,2.6vw,40px);align-items:flex-start;flex:1 1 420px;min-width:0}
-.cover{position:relative;flex:none;width:clamp(120px,22vw,340px);aspect-ratio:1;max-width:100%;border:0;padding:0;border-radius:14px;overflow:hidden;cursor:pointer;
-  background:radial-gradient(80% 70% at 30% 20%,#fff 0%,var(--paper) 55%,#e4e5e2 100%);box-shadow:0 18px 40px rgba(0,0,0,.35)}
-.cover canvas{position:absolute;inset:0;width:100%;height:100%}
-.cover .frame{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);height:66%;min-width:18%;max-width:72%;padding:10px 8px;border:1px solid rgba(44,47,54,.55);outline:1px solid rgba(44,47,54,.25);outline-offset:3px;background:rgba(255,255,255,.86);display:grid;place-items:center}
-.cover .ctitle{font-family:var(--title);color:var(--paper-ink);font-size:clamp(14px,2.1vw,30px);line-height:1.15;letter-spacing:.08em;writing-mode:vertical-rl;text-orientation:mixed;max-height:100%;overflow:hidden}
-.cover .ctitle.h{writing-mode:horizontal-tb;text-align:center;letter-spacing:.02em;font-size:clamp(12px,1.6vw,22px)}
-.cover .cauthor{position:absolute;left:0;right:0;bottom:7%;text-align:center;font-family:var(--latin);font-style:italic;color:var(--paper-ink);font-size:clamp(10px,1vw,14px)}
+.cover{position:relative;flex:none;width:clamp(120px,22vw,340px);aspect-ratio:1;max-width:100%;border:0;padding:0;border-radius:14px;overflow:hidden;cursor:pointer;background:#161a25;box-shadow:0 18px 40px rgba(0,0,0,.4),inset 0 0 0 1px rgba(228,197,140,.18)}
+.cover .art{position:absolute;inset:0;width:100%;height:100%;display:block}
 .cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .cover:focus-visible,button:focus-visible,label.ghost:focus-within,input:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .meta{min-width:0;padding-top:clamp(0px,1vw,14px)}
@@ -95,7 +90,6 @@ label.ghost input{position:absolute;opacity:0;width:1px;height:1px}
 @media (max-width:760px){
   .info{flex-basis:100%}
   .cover{width:96px;border-radius:10px}
-  .cover .ctitle{font-size:14px}
   .meta .artist{letter-spacing:.2em;margin-top:8px}
   .board{flex-basis:100%;max-width:none}
   .key .lbl{font-size:10px}
@@ -116,9 +110,7 @@ label.ghost input{position:absolute;opacity:0;width:1px;height:1px}
   <div class="top">
     <div class="info">
       <button class="cover" id="cover" aria-label="封面，点击换成自己的图片">
-        <canvas id="coverArt" aria-hidden="true"></canvas>
-        <span class="frame"><span class="ctitle" id="coverTitle">欢乐颂</span></span>
-        <span class="cauthor" id="coverAuthor">Beethoven</span>
+        <svg class="art" viewBox="0 0 300 300" aria-hidden="true" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="cvBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#262c3d"/><stop offset=".6" stop-color="#161a25"/><stop offset="1" stop-color="#0e1118"/></linearGradient><radialGradient id="cvWarm" cx=".18" cy=".12" r=".7"><stop offset="0" stop-color="#e4c58c" stop-opacity=".28"/><stop offset="1" stop-color="#e4c58c" stop-opacity="0"/></radialGradient><filter id="cvGlow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="cvGrain"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .05 0"/></filter></defs><rect width="300" height="300" fill="url(#cvBg)"/><rect width="300" height="300" fill="url(#cvWarm)"/><g fill="none" stroke="#e4c58c" stroke-width=".6" opacity=".22"><circle cx="150" cy="136" r="62"/><circle cx="150" cy="136" r="92"/><circle cx="150" cy="136" r="124"/><circle cx="150" cy="136" r="158"/></g><g fill="none" stroke-width="1.1"><g stroke="#e4c58c" opacity=".55"><circle cx="62" cy="92" r="12.0"/><path d="M62 85.5l6.5 6.5-6.5 6.5-6.5-6.5z" fill="#e4c58c" stroke="none"/></g><g stroke="#e4c58c" opacity=".55"><path d="M106 79l13 13-13 13-13-13z"/></g><g stroke="#e4c58c" opacity=".55"><circle cx="150" cy="92" r="12.0"/></g><g stroke="#e4c58c" opacity=".55"><path d="M194 79l13 13-13 13-13-13z"/></g><g stroke="#e4c58c" opacity=".55"><circle cx="238" cy="92" r="12.0"/></g><g stroke="#e4c58c" opacity=".55"><path d="M62 123l13 13-13 13-13-13z"/></g><g stroke="#e4c58c" opacity=".55"><circle cx="106" cy="136" r="12.0"/></g><g stroke="#f3dcae" opacity="1" filter="url(#cvGlow)"><circle cx="150" cy="136" r="12.0"/><path d="M150 129.5l6.5 6.5-6.5 6.5-6.5-6.5z" fill="#f3dcae" stroke="none"/></g><g stroke="#e4c58c" opacity=".55"><circle cx="194" cy="136" r="12.0"/></g><g stroke="#e4c58c" opacity=".55"><path d="M238 123l13 13-13 13-13-13z"/></g><g stroke="#e4c58c" opacity=".55"><circle cx="62" cy="180" r="12.0"/></g><g stroke="#e4c58c" opacity=".55"><path d="M106 167l13 13-13 13-13-13z"/></g><g stroke="#e4c58c" opacity=".55"><circle cx="150" cy="180" r="12.0"/></g><g stroke="#e4c58c" opacity=".55"><path d="M194 167l13 13-13 13-13-13z"/></g><g stroke="#e4c58c" opacity=".55"><circle cx="238" cy="180" r="12.0"/><path d="M238 173.5l6.5 6.5-6.5 6.5-6.5-6.5z" fill="#e4c58c" stroke="none"/></g></g><line x1="28" y1="246" x2="86" y2="246" stroke="#e4c58c" stroke-width=".7" opacity=".7"/><text x="28" y="268" fill="#eef0f4" font-family="Shippori Mincho, Noto Serif SC, serif" font-size="15" letter-spacing="2.5">光遇琴谱</text><text x="28" y="284" fill="#e4c58c" font-family="Cormorant Garamond, Georgia, serif" font-size="9" letter-spacing="3.6" opacity=".85">PIANO PRACTICE</text><rect width="300" height="300" filter="url(#cvGrain)"/></svg>
         <img id="coverImg" alt="" hidden>
       </button>
       <input type="file" id="coverFile" accept="image/*" hidden>
@@ -252,22 +244,9 @@ function build(){
 function showSong(){
   $('title').textContent=song.name;$('artist').textContent=song.author||'—';
   $('sub').textContent='光遇琴谱 · 15 键 · '+song.notes.length+' 音'+(song.sample?' · 示例曲':'');
-  const ct=$('coverTitle');ct.textContent=song.name;ct.classList.toggle('h',!/[぀-ヿ㐀-鿿]/.test(song.name));
-  $('coverAuthor').textContent=song.author||'';drawCover();
 }
 function seekTo(ms){pos=Math.max(0,Math.min(ms,dur()));nextIdx=shown.findIndex(g=>g.t>=pos-1);if(nextIdx<0)nextIdx=shown.length;pressedSet.clear();paint()}
 
-// ---------- 封面：按曲名生成细线花草 ----------
-function drawCover(){
-  const cv=$('coverArt'),r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;if(!r.width)return;
-  cv.width=r.width*dpr;cv.height=r.height*dpr;const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
-  let h=2166136261;for(const ch of song.name)h=Math.imul(h^ch.codePointAt(0),16777619);const rnd=()=>((h=Math.imul(h^(h>>>15),2246822507)>>>0)/4294967296);
-  const W=r.width,H=r.height;g.lineWidth=0.8;
-  for(let i=0;i<46;i++){const ang=rnd()*Math.PI*2,rad=W*(0.2+rnd()*0.34),x=W/2+Math.cos(ang)*rad,y=H/2+Math.sin(ang)*rad,s=4+rnd()*W*0.05;
-    g.strokeStyle=rnd()<0.25?'rgba(96,150,128,.55)':'rgba(70,74,84,.42)';
-    g.beginPath();g.moveTo(W/2+Math.cos(ang)*rad*0.55,H/2+Math.sin(ang)*rad*0.55);g.quadraticCurveTo(x+(rnd()-.5)*s*3,y+(rnd()-.5)*s*3,x,y);g.stroke();
-    const petals=4+(rnd()*3|0);for(let p=0;p<petals;p++){const a=p/petals*Math.PI*2+rnd();g.beginPath();g.ellipse(x+Math.cos(a)*s*.55,y+Math.sin(a)*s*.55,s*.55,s*.22,a,0,Math.PI*2);g.stroke()}}
-}
 
 // ---------- 声音 ----------
 function audio(){if(!ctx){const AC=window.AudioContext||window.webkitAudioContext;if(AC){ctx=new AC();const comp=ctx.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=4;master=ctx.createGain();master.gain.value=0.8;master.connect(comp).connect(ctx.destination)}}if(ctx&&ctx.state==='suspended')ctx.resume();return ctx}
@@ -384,7 +363,7 @@ document.addEventListener('dragleave',e=>{if(--dragDepth<=0){dragDepth=0;veil.hi
 document.addEventListener('dragover',e=>e.preventDefault());
 document.addEventListener('drop',e=>{e.preventDefault();dragDepth=0;veil.hidden=true;const f=e.dataTransfer.files[0];if(f)f.arrayBuffer().then(b=>load(b,f.name))});
 
-if(window.ResizeObserver){new ResizeObserver(sizeLane).observe(lane);new ResizeObserver(drawCover).observe($('cover'))}else window.addEventListener('resize',()=>{sizeLane();drawCover()});
+if(window.ResizeObserver)new ResizeObserver(sizeLane).observe(lane);else window.addEventListener('resize',sizeLane);
 build();showSong();renderLabels();seekTo(0);showLoop();
 })();
 </script>
