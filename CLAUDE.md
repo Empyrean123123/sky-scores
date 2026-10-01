@@ -60,3 +60,7 @@ python3 make.py --tracks <songId> # 看某份谱的轨道（找人声/主奏/贝
 - 主奏乐器取每拍最高音（去掉持续音）。
 - 主歌听着卡时先查伴奏律动，别删主唱的音。
 - 光遇不能中途变调：原曲转调的段落按同级数处理（或用 `KEYSEG` 移到白键上）。
+
+## 练琴网页（practice/index.html）
+
+- 线上版是 artifact https://claude.ai/artifact/H7WRWNwhPTa8aKzMXfhYTJ 。仓库里的 `practice/index.html` 必须和线上 artifact **逐字节一致**：每次改完先发布 artifact，再用 Artifact 工具的 `read` 取回线上完整 HTML（结果里给的保存文件），原样复制到 `practice/index.html`，用 sha256 核对两边相同后再提交推送。不要手写另一套外壳。
