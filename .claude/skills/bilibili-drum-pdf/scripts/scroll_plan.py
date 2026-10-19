@@ -21,18 +21,21 @@ frames = np.frombuffer(raw, np.uint8).reshape(-1, H, W)
 x0, x1, m = int(W * .04), int(W * .96), int(H * .09)   # 去掉左右边和顶部水印带
 prof = [(f[:, x0:x1] < 120).sum(1).astype(np.float32) for f in frames]
 
-offs, tot, bad = [0], 0, []
+offs, tot, bad, moved = [0], 0, [], [False]
 for i in range(1, len(prof)):
     p0, p1 = prof[i - 1], prof[i]
-    errs = [np.abs(p0[s + m:H - m] - p1[m:H - m - s]).mean() for s in range(0, int(H * .9))]
-    s = int(np.argmin(errs))
-    if errs[s] > 5 and errs[s] > 0.5 * np.mean(prof[i]):
+    if np.abs(p0[m:H - m] - p1[m:H - m]).mean() < 1:      # 画面没动（高亮移动不算）
+        offs.append(tot); moved.append(False); continue
+    # 至少留 150px 重叠，否则重叠太短时误差趋近 0，会被误判成大跳
+    errs = [np.abs(p0[s + m:H - m] - p1[m:H - m - s]).mean() for s in range(1, H - 2 * m - 150)]
+    s = int(np.argmin(errs)) + 1
+    if errs[s - 1] > 5 and errs[s - 1] > 0.5 * np.mean(prof[i]):
         bad.append(round(i / a.fps, 2))   # 不是平移（翻页/跳转/转场），需要人工看
-    tot += s; offs.append(tot)
+    tot += s; offs.append(tot); moved.append(True)
 
-segs = []   # (偏移, 起, 止) 静止段
+segs = []   # (偏移, 起, 止) 静止段：连续未变化的帧
 for i, o in enumerate(offs):
-    if segs and segs[-1][0] == o: segs[-1][2] = i
+    if segs and not moved[i]: segs[-1][2] = i
     else: segs.append([o, i, i])
 mid = [(o, round((b + c) / 2 / a.fps, 2)) for o, b, c in segs]
 pick = [mid[0]]

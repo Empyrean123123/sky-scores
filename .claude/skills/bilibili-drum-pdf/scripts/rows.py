@@ -21,14 +21,14 @@ ap.add_argument('--per-strip', type=int, default=6)
 a = ap.parse_args()
 
 caps = json.load(open(a.caps))
-rgb = {c['id']: np.asarray(Image.open(f"{a.task}/captures/{c['id']}.png").convert('RGB')).astype(int) for c in caps}
+rgb = {c['id']: np.asarray(Image.open(f"{a.task}/captures/{c['id']}.png").convert('RGB')) for c in caps}   # uint8 省内存
 H, W = next(iter(rgb.values())).shape[:2]
-gray = {k: v[:, :, 0] * .299 + v[:, :, 1] * .587 + v[:, :, 2] * .114 for k, v in rgb.items()}
+gray = {k: (v[:, :, 0] * .299 + v[:, :, 1] * .587 + v[:, :, 2] * .114).astype(np.float32) for k, v in rgb.items()}
 
 
 def ink_mask(c):
     """上游 ink_mask 是 gray<165 或高饱和深色；这里放宽到 gray<180，保证预检比门禁严。"""
-    v = rgb[c]; mx, mn = v.max(2), v.min(2)
+    v = rgb[c]; mx, mn = v.max(2).astype(int), v.min(2).astype(int)
     return (gray[c] < 180) | (((mx - mn) > 45) & (mn < 150))
 
 
@@ -179,7 +179,7 @@ for blk in blocks:
     for c in rgb:
         if not sees(c, y0, y1): continue
         ly0, ly1 = y0 - off[c], y1 - off[c]
-        b = rgb[c][int(ly0):int(ly1)]
+        b = rgb[c][int(ly0):int(ly1)].astype(int)
         blue = int((((b[:, :, 2] - b[:, :, 0]) > 40) & (b[:, :, 2] > 150)).sum())
         hit_wm = ly0 < wm[3] and ly1 > wm[1]
         score = hit_wm * 10 + (blue > 200) * 3 + abs((ly0 + ly1) / 2 - H / 2) / H
@@ -238,7 +238,7 @@ n = a.per_strip
 for p in range(0, len(regions), n):
     ims = []
     for r in regions[p:p + n]:
-        im = Image.fromarray(rgb[r['capture']].astype(np.uint8)).crop(r['bbox'])
+        im = Image.fromarray(rgb[r['capture']]).crop(r['bbox'])
         d = ImageDraw.Draw(im); d.rectangle([0, 0, im.width - 1, im.height - 1], outline=(255, 0, 0))
         d.text((W - 110, 4), r['position'], fill=(255, 0, 0)); ims.append(im)
     S = Image.new('RGB', (W, sum(i.height for i in ims)), 'white'); y = 0
