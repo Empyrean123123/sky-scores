@@ -20,7 +20,7 @@ description: 把 B站（或本地）动态鼓谱视频——白底多行谱面�
    mkdir -p $W/src && cd $W/src && uvx yt-dlp -F 'https://www.bilibili.com/video/BVxxxx'   # 选 1080p avc 纯视频流
    uvx yt-dlp -f 30080 -o 'v.%(ext)s' 'https://www.bilibili.com/video/BVxxxx'
    ```
-   分 P 加 `?p=N`。只要画面，不要音频。
+   分 P 加 `?p=N`。只要画面，不要音频。下载可能超过 2 分钟，用后台运行（`run_in_background`）。
 
 3. **准备任务**：`$W/cv.sh $W/src/v.mp4 --output $W/task --summary` → `needs_source_review`。
 
@@ -29,11 +29,14 @@ description: 把 B站（或本地）动态鼓谱视频——白底多行谱面�
 5. **测滚动、定截图点**：`$PY $S/scroll_plan.py $W/src/v.mp4 $W/plan.json` —— 输出总滚动量和截图计划（相邻截图偏移 ≤600px，整行重叠）。出现"非平移变化"或"单步滚动超过 max-step"时人工看那几秒。
 
 6. **截图**：`$PY $S/capture_plan.py $W/cv.sh $W/task $W/plan.json $W/caps.json`
+   之后要补采（rows.py 说某几行没有完整截图时）：`$PY $S/capture_plan.py $W/cv.sh $W/task --add 秒数 $W/caps.json`
 
 7. **找谱行、放切线**：`mkdir $W/rows && $PY $S/rows.py $W/task $W/caps.json $W/rows`
-   - 每行从完整可见的截图里选：**优先避开水印**（水印转描后是一团垃圾），其次避开蓝色播放高亮（浅色，不影响转描），再选居中的。水印不在右上角时用 `--wm x0,y0,x1,y1` 指定。
-   - 切线放在全局滚动坐标里**最长空白段的中点**，相邻两行共用同一条线，不丢不重。
-   - `contested_gaps` 非空 = 两行的记号在高度上交错、找不到空白线，需要人工决定（见下面"坑"）。
+   - 五线按实测线距做模板匹配，短行、半行末行也能找到；行距突然变大会警告"可能漏了行"。
+   - 每个区域从完整可见的截图里选：**优先避开水印**（水印转描后是一团垃圾），其次避开蓝色播放高亮（浅色，不影响转描），再选居中的。水印不在右上角时用 `--wm x0,y0,x1,y1` 指定。
+   - 切线放在全局滚动坐标里**最长空白段的中点**，相邻两行共用同一条线，不丢不重；墨迹判定比上游 crop-checks 更严，预检过了门禁就过。
+   - **行间没有空白行**（上一行下方的连音/符梁和下一行上方的重音/开镲同高）时自动把这几行合并成一个区域，报告"合并的行"。合并块里只有第一组五线会被上游修补，交付前用 `deliver` 补画其余五线。
+   - 报告"记号可能被切给了离得远的那一行"的行间（空白带很窄或行间特别高）：**重点看这几处的 strip**。若上一行的记号（如三连音括号）落到了下一行顶部，用 `--merge 18-19`（行号）把两行合并后重跑。
    - **必须实际看 `$W/rows/strip_*.png` 每一张**：标题块完整、每行完整、没有半行、没有水印压到音符，并**逐行读出行首小节号**，核对每行小节数和下一行起始号吻合，末行有终止线。
 
 8. **登记看图 + 粗拼**：
@@ -45,7 +48,7 @@ description: 把 B站（或本地）动态鼓谱视频——白底多行谱面�
    $W/cv.sh --operation assemble --task $W/task --request $W/a.json --summary     # → ready_to_redraw
    $W/cv.sh --operation crop-checks --task $W/task --request $W/empty.json        # 必须 passed
    ```
-   `--bars` 是你自己从图上读出的行首小节号，不要猜；`--title` 用谱面上的原曲名。
+   `--bars` 是你自己从图上读出的**原谱每一行**的行首小节号（合并块里的几行也逐行给），不要猜；`--title` 用谱面上的原曲名。
 
 9. **重绘**：云端会话没有生图工具 → `python3 $S/finish.py $W/cv.sh $W/task vector`（每组登记 unavailable，转上游的轮廓矢量 + 五线修补）。宿主真有生图工具时改走上游 `redraw-requests → dispatch-redraw → finish-redraw → review-redraw`，见上游 `references/stage-recovery-layout.md`。
 
@@ -55,14 +58,21 @@ description: 把 B站（或本地）动态鼓谱视频——白底多行谱面�
 
 11. **最终审阅**：`python3 $S/finish.py $W/cv.sh $W/task review --notes "实际逐页看到的内容和已知瑕疵"` → `complete`。
 
-12. **交付**：把 `$W/task/exports/<revision>/<谱名>.pdf` 复制成**纯英文文件名**（中文/日文名在 App 里可能打不开），用 SendUserFile 发，`display: "attach"`。说明页数、小节范围、走的是矢量转描还是生图、已知瑕疵。
+12. **交付**：`python3 $S/finish.py $W/cv.sh $W/task deliver --name xxx-drums.pdf` —— 给合并块补画五线（`restaff.py`，按原裁剪实测的线位和长度），输出 `$W/out/xxx-drums.pdf`。用**纯英文文件名**（中文/日文名在 App 里可能打不开）。有合并块时再看一眼补线后的页面。用 SendUserFile 发，`display: "attach"`。说明页数、小节范围、走的是矢量转描还是生图、已知瑕疵（具体到小节）。
+
+## 多首并行
+
+用户一次给多个视频时，每首开一个后台子代理（Agent 工具，`general-purpose`），各自独立工作目录，共用同一个上游克隆（`UPSTREAM_DIR=…`，只读）。子代理不要发文件给用户；收到报告后自己看至少一页再发。
 
 ## 坑
 
 - **上游匿名下载**在云端被 B站拒（网页返回"出错啦"）；yt-dlp 能拿到。不要去改上游的下载代码或加 Cookie。
 - **staff_spacing 要用实测小数**：矢量转描在 `staff_top + i*staff_spacing` ±2px 处找五线，取整成 14 而实际是 13.5 时第五线偏 2px，导出报"五线边界不可确认"。`rows.py` 已用每行实测首末线位置。
 - **裁剪门禁是硬门槛**：切线压到任何墨迹（哪怕 2 个像素的符头顶）都会 `crop_edge` 阻止导出。`rows.py` 只在空白行下刀，并在每张截图里 ±4px 校正滚动测量误差。
-- **记号高度交错**（contested gap）：比如第 44 小节下方三连音括号和第 45 小节上方开镲 o 同高，没有能把两者分开的水平线。选二者之上的空白线，让括号跟下一行走——两行在 PDF 里紧挨着时位置和原谱一致；然后按第 10 步保证它们不被分页拆开，并在交付说明里讲清楚。
+- **记号高度交错**：没有空白线时 rows.py 自动合并；有很窄的空白线但记号被分错行时（例如第 44 小节下方三连音括号落到第 45 行顶部）要么 `--merge`，要么保证这两行不被分页拆开（第 10 步），并在交付说明里讲清楚。
 - **重叠裁剪不可取**：两行区域重叠会让记号在 PDF 里出现两次。
+- **bbox 下边界不含**：上游检查 `bottom-1` 那一行，rows.py 已把下边界设为空白行 +1。
+- **stage/export 报 invalid_state**：finish.py 会直接调上游函数打印真正的异常（常见是"五线边界不可确认"= staff_top/staff_spacing 不准）。
+- **细笔画丢失**：浅于上游墨迹阈值（gray 165）的细字笔画（作者名小字、细五线）转描后会断，五线由修补/补画解决，小字只能在交付说明里提。
 - 换来源截图、改切线后要重新 `assemble`（上游会撤销旧冻结），再跑 crop-checks。
 - `cv.sh` 每次调用都 `uv run --isolated`，单次要几秒；不要并行调用同一个任务。
