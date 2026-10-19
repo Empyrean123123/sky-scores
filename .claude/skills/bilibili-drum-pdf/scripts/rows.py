@@ -104,29 +104,33 @@ def staffs(c):
 
 
 loc = {c['id']: staffs(c['id']) for c in caps}
-order = [c['id'] for c in caps]
-masks = {c: _m[c][:, XL:XR] for c in order}
+order = list(dict.fromkeys(c['id'] for c in sorted(caps, key=lambda c: c['seconds'])))   # 按时间（补采的可能追加在末尾）
+masks = {}
+for c in order:   # 对齐时不看水印框（半透明水印压在共有行上会让差异变大）
+    _mm = _m[c].copy(); _mm[wm[1]:wm[3], wm[0]:wm[2]] = False; masks[c] = _mm[:, XL:XR]
 
 
 def band(c, t):
-    y0, y1 = int(t - 2 * SP), int(t + 6 * SP)
+    y0 = int(round(t - 2 * SP)); y1 = y0 + int(8 * SP)
     return masks[c][max(0, y0):min(H, y1)] if y0 >= 0 and y1 <= H else None
 
 
 def match(p, c):
-    """按共有谱行的内容对齐相邻两张截图：返回 c 相对 p 的滚动量和差异率（翻页、跳转、高亮移动都不影响）。"""
+    """按共有谱行的内容对齐相邻两张截图：返回 c 相对 p 的滚动量和差异率（翻页、跳转、高亮移动都不影响）。
+    五线位置有 ±1px 的取整误差，细线一错位差异就很大，所以每个候选再在 ±2px 内细调。"""
     best = None
-    for a, _ in loc[p]:
-        for b, _ in loc[c]:
-            s = a - b
-            pairs = [(x, y) for x, _ in loc[p] for y, _ in loc[c] if abs(x - (y + s)) < 3]
-            diffs = []
-            for x, y in pairs:
-                bx, by = band(p, x), band(c, y)
-                if bx is not None and by is not None and bx.shape == by.shape:
-                    diffs.append((bx ^ by).mean())
-            if diffs and (best is None or np.mean(diffs) < best[1]):
-                best = (s, float(np.mean(diffs)), len(diffs))
+    for a0, _ in loc[p]:
+        for b0, _ in loc[c]:
+            pairs = [(x, y) for x, _ in loc[p] for y, _ in loc[c] if abs(x - (y + a0 - b0)) < 3]
+            for d in range(-2, 3):
+                s = a0 - b0 + d
+                diffs = []
+                for x, y in pairs:
+                    bx, by = band(p, y + s), band(c, y)
+                    if bx is not None and by is not None and bx.shape == by.shape:
+                        diffs.append((bx ^ by).mean())
+                if diffs and (best is None or np.mean(diffs) < best[1]):
+                    best = (s, float(np.mean(diffs)), len(diffs))
     return best
 
 
