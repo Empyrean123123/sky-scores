@@ -78,17 +78,44 @@ def staffs(c):
 
 
 loc = {c['id']: staffs(c['id']) for c in caps}
-off = {c['id']: float(c['off']) for c in caps}
-for _ in range(2):   # 聚类后用各截图的实测位置修正偏移（滚动测量有 ±2px 误差）
-    pts = sorted((t + off[c], c, t) for c in loc for t, _ in loc[c])
-    clusters = []
-    for y, c, t in pts:
-        if clusters and y - clusters[-1][-1][0] < 2 * SP: clusters[-1].append((y, c, t))
-        else: clusters.append([(y, c, t)])
-    tops = [np.mean([p[0] for p in cl]) for cl in clusters]
-    for c in loc:
-        d = [tops[i] - (t + off[c]) for i, cl in enumerate(clusters) for (_, cc, t) in cl if cc == c]
-        if d: off[c] += float(np.median(d))
+order = [c['id'] for c in caps]
+masks = {c: ink_mask(c) for c in order}
+
+
+def band(c, t):
+    y0, y1 = int(t - 2 * SP), int(t + 6 * SP)
+    return masks[c][max(0, y0):min(H, y1)] if y0 >= 0 and y1 <= H else None
+
+
+def match(p, c):
+    """按共有谱行的内容对齐相邻两张截图：返回 c 相对 p 的滚动量和差异率（翻页、跳转、高亮移动都不影响）。"""
+    best = None
+    for a, _ in loc[p]:
+        for b, _ in loc[c]:
+            s = a - b
+            pairs = [(x, y) for x, _ in loc[p] for y, _ in loc[c] if abs(x - (y + s)) < 3]
+            diffs = []
+            for x, y in pairs:
+                bx, by = band(p, x), band(c, y)
+                if bx is not None and by is not None and bx.shape == by.shape:
+                    diffs.append((bx ^ by).mean())
+            if diffs and (best is None or np.mean(diffs) < best[1]):
+                best = (s, float(np.mean(diffs)), len(diffs))
+    return best
+
+
+off = {order[0]: 0.0}
+for p, c in zip(order, order[1:]):
+    m = match(p, c)
+    if m is None or m[1] > .03:
+        raise SystemExit(f'{p} 和 {c} 找不到内容相同的谱行（差异 {m and round(m[1], 3)}），'
+                         f'两张截图之间没有重叠，在它们之间补采（capture_plan.py --add 秒数）后重跑')
+    off[c] = off[p] + m[0]
+pts = sorted((t + off[c], c, t) for c in loc for t, _ in loc[c])
+clusters = []
+for y, c, t in pts:
+    if clusters and y - clusters[-1][-1][0] < 2 * SP: clusters[-1].append((y, c, t))
+    else: clusters.append([(y, c, t)])
 tops = [float(np.mean([p[0] for p in cl])) for cl in clusters]
 h = 4 * SP
 pitch = float(np.median(np.diff(tops))) if len(tops) > 1 else h * 3

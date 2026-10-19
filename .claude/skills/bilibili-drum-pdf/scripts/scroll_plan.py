@@ -24,7 +24,7 @@ prof = [(f[:, x0:x1] < 120).sum(1).astype(np.float32) for f in frames]
 offs, tot, bad = [0], 0, []
 for i in range(1, len(prof)):
     p0, p1 = prof[i - 1], prof[i]
-    errs = [np.abs(p0[s + m:H - m] - p1[m:H - m - s]).mean() for s in range(0, int(H * .6))]
+    errs = [np.abs(p0[s + m:H - m] - p1[m:H - m - s]).mean() for s in range(0, int(H * .9))]
     s = int(np.argmin(errs))
     if errs[s] > 5 and errs[s] > 0.5 * np.mean(prof[i]):
         bad.append(round(i / a.fps, 2))   # 不是平移（翻页/跳转/转场），需要人工看
@@ -44,6 +44,11 @@ for i, (o, t) in enumerate(mid):
         else:
             pick.append(mid[i - 1])
 if pick[-1] != mid[-1]: pick.append(mid[-1])
+jumps = [b - a for (a, _), (b, _) in zip(mid, mid[1:]) if b - a > H * .4]
+if bad or jumps:
+    # 翻页式/大跳：滚动量测不准，每个停留 ≥1 秒的画面都截（重复画面由 rows.py 按内容对齐时自动合并）
+    pick = [(o, round((b + c) / 2 / a.fps, 2)) for o, b, c in segs if (c - b + 1) / a.fps >= 1] or mid
+    print('检测到翻页/大跳，改为每个静止画面都截；rows.py 会按谱行内容重新对齐偏移')
 json.dump(pick, open(a.out, 'w'))
 print(f'{W}x{H}, {len(frames)} 帧, 总滚动 {tot}px, 静止段 {len(segs)}, 截图 {len(pick)} 张')
 print('计划:', pick)
