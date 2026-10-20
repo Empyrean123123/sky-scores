@@ -13,6 +13,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument('cv'); ap.add_argument('task'); ap.add_argument('step', choices=['vector', 'export', 'review', 'deliver'])
 ap.add_argument('--margin', type=float, default=24); ap.add_argument('--gap', type=float, default=6)
 ap.add_argument('--notes'); ap.add_argument('--name')
+ap.add_argument('--thick', action='store_true', help='deliver 时所有五线重画成 0.6pt（屏幕上看更清楚）')
 a = ap.parse_args()
 
 
@@ -58,7 +59,8 @@ elif a.step == 'deliver':
     out = os.path.join(os.path.dirname(os.path.abspath(a.task)), 'out'); os.makedirs(out, exist_ok=True)
     dst = os.path.join(out, a.name)
     subprocess.run(['uv', 'run', '--quiet', '--with', 'numpy', '--with', 'pillow', '--with', 'pypdf', '--with', 'reportlab',
-                    'python', os.path.join(os.path.dirname(__file__), 'restaff.py'), a.task, dst], check=True)
+                    'python', os.path.join(os.path.dirname(__file__), 'restaff.py'), a.task, dst]
+                   + (['--all', '--width', '0.6'] if a.thick else []), check=True)
     print('交付文件:', dst)
 else:
     if not a.notes: raise SystemExit('--notes 必填：写实际看图结果')

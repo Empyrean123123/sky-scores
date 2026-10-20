@@ -2,7 +2,8 @@
 合并成一个 region 的多行谱里其余各组的细线会在轮廓转描中丢失。
 
 本脚本在每个 system 原裁剪里找出全部五线组，把未被上游修补的组按原位置、原长度画回 PDF。
-用法: restaff.py <task> out.pdf     （读取 task/record.json 当前 output）
+用法: restaff.py <task> out.pdf [--all --width 0.6]     （读取 task/record.json 当前 output）
+  --all 连上游已修补的那组也重画，配合 --width（单位 pt）加粗：上游五线只有约 0.3pt，手机缩小看会断续。
 不改任务记录；输出是另一个文件，交付时用它。
 """
 import io, json, sys
@@ -12,6 +13,8 @@ from pypdf import PdfReader, PdfWriter
 from reportlab.pdfgen.canvas import Canvas
 
 task, out = sys.argv[1:3]
+ALL = '--all' in sys.argv
+WIDTH = float(sys.argv[sys.argv.index('--width') + 1]) if '--width' in sys.argv else None
 rec = json.load(open(f'{task}/record.json'))
 o = rec['output']
 mats = json.load(open(f"{task}/{o['pdf'].rsplit('/', 1)[0]}/materials.json"))['blocks']
@@ -57,14 +60,14 @@ for p in o['placements']:
     gray = np.asarray(Image.open(f"{task}/{b['path']}").convert('L')).astype(int)
     x0, _, _, ytop = p['bbox']; s = p['scale']
     for g, xa, xb in staves(gray, b['staff_spacing']):
-        if abs(g[0] - b['staff_top']) < b['staff_spacing']: continue   # 上游已修补
+        if not ALL and abs(g[0] - b['staff_top']) < b['staff_spacing']: continue   # 上游已修补
         c = overlays.setdefault(p['page'], [])
         c.extend((x0 + xa * s, ytop - y * s, x0 + xb * s) for y in g)
         added += 1
 w = PdfWriter()
 for i, page in enumerate(reader.pages, 1):
     if i in overlays:
-        buf = io.BytesIO(); c = Canvas(buf, pagesize=(pw, ph)); c.setLineWidth(1.1 * o['placements'][0]['scale'])
+        buf = io.BytesIO(); c = Canvas(buf, pagesize=(pw, ph)); c.setLineWidth(WIDTH or 1.1 * o['placements'][0]['scale'])
         for xa, y, xb in overlays[i]: c.line(xa, y, xb, y)
         c.save(); buf.seek(0)
         page.merge_page(PdfReader(buf).pages[0])
