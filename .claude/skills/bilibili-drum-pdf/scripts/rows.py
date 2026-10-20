@@ -116,12 +116,14 @@ def band(c, t):
 
 
 def match(p, c):
-    """按共有谱行的内容对齐相邻两张截图：返回 c 相对 p 的滚动量和差异率（翻页、跳转、高亮移动都不影响）。
-    五线位置有 ±1px 的取整误差，细线一错位差异就很大，所以每个候选再在 ±2px 内细调。"""
-    best = None
+    """按共有谱行的内容对齐相邻两张截图：返回 (c 相对 p 的滚动量, 差异率, 重叠行数)。
+    五线位置有 ±1px 的取整误差，细线一错位差异就很大，所以每个候选再在 ±2px 内细调。
+    重复段落的谱行像素级相同，错开整行也能匹配上；在差异达标的候选里优先选重叠行最多的。"""
+    cands = []
     for a0, _ in loc[p]:
         for b0, _ in loc[c]:
             pairs = [(x, y) for x, _ in loc[p] for y, _ in loc[c] if abs(x - (y + a0 - b0)) < 3]
+            best = None
             for d in range(-2, 3):
                 s = a0 - b0 + d
                 diffs = []
@@ -131,7 +133,10 @@ def match(p, c):
                         diffs.append((bx ^ by).mean())
                 if diffs and (best is None or np.mean(diffs) < best[1]):
                     best = (s, float(np.mean(diffs)), len(diffs))
-    return best
+            if best: cands.append(best)
+    if not cands: return None
+    ok = [x for x in cands if x[1] <= .06 and x[0] >= -3]   # 谱面只会往下走（片尾跳回开头的画面已从 plan 去掉）
+    return max(ok, key=lambda x: (x[2], -x[1])) if ok else min(cands, key=lambda x: x[1])
 
 
 off = {order[0]: 0.0}
