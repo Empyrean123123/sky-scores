@@ -233,10 +233,10 @@ for blk in blocks:
         if not sees(c, y0, y1): continue
         ly0, ly1 = y0 - off[c], y1 - off[c]
         b = rgb[c][int(ly0):int(ly1)].astype(int)
-        blue = int(((((b[:, :, 2] - b[:, :, 0]) > 40) & (b[:, :, 2] > 150)) |              # 蓝色播放高亮
+        blue = int(((((b[:, :, 2] - b[:, :, 0]) > 25) & ((b[:, :, 2] - b[:, :, 1]) > 8) & (b[:, :, 2] > 150) & (b[:, :, 0] > 150)) |   # 蓝色播放高亮（浅蓝 199,217,237 也要算）
                     (((b[:, :, 0] - b[:, :, 2]) > 20) & (b[:, :, 1] > 200) & (b[:, :, 0] > 200))).sum())   # 黄色高亮
         hit_wm = ly0 < wm[3] and ly1 > wm[1]
-        score = hit_wm * 10 + (blue > 200) * 3 + abs((ly0 + ly1) / 2 - H / 2) / H
+        score = hit_wm * 10 + min(blue / 1000, 6) + abs((ly0 + ly1) / 2 - H / 2) / H
         if best is None or score < best[0]: best = (score, c, blue, hit_wm)
     if best is None:
         need = y0 - off[min(rgb, key=lambda c: abs(off[c] - y0))]
@@ -279,7 +279,7 @@ json.dump(regions, open(f'{a.out}/regions.json', 'w'), ensure_ascii=False, inden
 rep = {'rows': len(tops), 'regions': len(sys_r), 'offsets': off, 'line_spacing': SP,
        'merged': [r['rows'] for r in report if len(r['rows']) > 1], 'maybe_missed_after': missed,
        'staff_top_outliers': odd,
-       'with_blue': [r['rows'] for r in report if r['blue'] > 200],
+       'with_blue': [r['rows'] for r in report if r['blue'] > 2500],
        'with_watermark': [r['rows'] for r in report if r['watermark']], 'sources': [r['cap'] for r in report]}
 json.dump(rep, open(f'{a.out}/rows_report.json', 'w'), ensure_ascii=False, indent=1)
 print('来源:', rep['sources'])
