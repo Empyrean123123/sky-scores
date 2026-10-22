@@ -21,6 +21,7 @@ description: 把 B站（或本地）动态鼓谱视频——白底多行谱面�
    uvx yt-dlp -f 30080 -o 'v.%(ext)s' 'https://www.bilibili.com/video/BVxxxx'
    ```
    分 P 加 `?p=N`。只要画面，不要音频。下载可能超过 2 分钟，用后台运行（`run_in_background`）。
+   yt-dlp 也失败（`Unable to extract initial state` / 412）时的匿名备用路线：`api.bilibili.com/x/player/pagelist?bvid=…` 取 cid → `x/player/playurl?bvid=…&cid=…&fnval=4048&try_look=1`（不带 try_look 只给 480p）取 1080p avc 的 `baseUrl`；默认 CDN 报 HTTP 567 时把主机换成 `upos-sz-mirrorcos.bilivideo.com`。请求带普通浏览器 UA 和 `Referer: https://www.bilibili.com`，不用 Cookie。
 
 3. **准备任务**：`$W/cv.sh $W/src/v.mp4 --output $W/task --summary` → `needs_source_review`。
 
@@ -70,7 +71,7 @@ description: 把 B站（或本地）动态鼓谱视频——白底多行谱面�
 - **staff_spacing 要用实测小数**：矢量转描在 `staff_top + i*staff_spacing` ±2px 处找五线，取整成 14 而实际是 13.5 时第五线偏 2px，导出报"五线边界不可确认"。`rows.py` 已用每行实测首末线位置。
 - **裁剪门禁是硬门槛**：切线压到任何墨迹（哪怕 2 个像素的符头顶）都会 `crop_edge` 阻止导出。`rows.py` 只在空白行下刀，并在每张截图里 ±4px 校正滚动测量误差。
 - **记号高度交错**：没有空白线时 rows.py 自动合并；有很窄的空白线但记号被分错行时（例如第 44 小节下方三连音括号落到第 45 行顶部）要么 `--merge`，要么保证这两行不被分页拆开（第 10 步），并在交付说明里讲清楚。
-- **翻页式 / 软件界面录屏**（画面整屏跳、顶部有 Guitar Pro 类工具条、右侧滚动条、黄色高亮）：scroll_plan.py 会自动改为"每个静止画面都截"，rows.py 按共有谱行内容对齐偏移（不信滚动测量）。顶部工具条用 `--wm 0,0,1920,<工具条下沿>` 覆盖，通栏的水印框以上视为不可见；谱面左右范围按五线端点自动收窄，避开滚动条和左边缘的当前行标记。视频末尾跳回开头的画面要从 plan 里删掉（看 `非平移变化` 的时间点）。
+- **翻页式 / 软件界面录屏**（画面整屏跳、顶部有 Guitar Pro 类工具条、右侧滚动条、黄色高亮）：scroll_plan.py 会自动改为"每个静止画面都截"，rows.py 按共有谱行内容对齐偏移（不信滚动测量）。顶部工具条用 `--wm 0,0,1920,<工具条下沿>` 覆盖，通栏的水印框以上视为不可见；谱面左右范围按五线端点自动收窄，避开滚动条和左边缘的当前行标记。视频末尾跳回开头的画面要从 plan 里删掉——先抽帧确认真的跳回了开头；`非平移变化` 很多时候只是播放高亮在动，平滑滚动的视频也常被判成翻页模式（只是多截几张，结果不受影响）。
 - **悬空记号**：两行之间单独漂着的开镲 o、连音数字、括号，rows.py 不一定能判断归属（切在最长空白带中间）。看 strip 时专门看每行上下边缘有没有不属于本行的记号，有就 `--merge`。
 - **重叠裁剪不可取**：两行区域重叠会让记号在 PDF 里出现两次。
 - **bbox 下边界不含**：上游检查 `bottom-1` 那一行，rows.py 已把下边界设为空白行 +1。
