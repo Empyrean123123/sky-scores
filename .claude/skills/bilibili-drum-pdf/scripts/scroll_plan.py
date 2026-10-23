@@ -52,6 +52,9 @@ if bad or jumps:
     # 翻页式/大跳：滚动量测不准，每个停留 ≥1 秒的画面都截（重复画面由 rows.py 按内容对齐时自动合并）
     pick = [(o, round((b + c) / 2 / a.fps, 2)) for o, b, c in segs if (c - b + 1) / a.fps >= 1] or mid
     print('检测到翻页/大跳，改为每个静止画面都截；rows.py 会按谱行内容重新对齐偏移')
+end_t = round((len(frames) - 1) / a.fps, 2)
+if offs[-1] == pick[-1][0] and end_t - pick[-1][1] >= 1:
+    pick.append((offs[-1], end_t))   # 片尾停住后的画面：最后一行通常已没有播放高亮（若片尾跳回开头，这张要删掉）
 json.dump(pick, open(a.out, 'w'))
 print(f'{W}x{H}, {len(frames)} 帧, 总滚动 {tot}px, 静止段 {len(segs)}, 截图 {len(pick)} 张')
 print('计划:', pick)

@@ -293,7 +293,7 @@ for p in range(0, len(regions), n):
     for r in regions[p:p + n]:
         im = Image.fromarray(rgb[r['capture']]).crop(r['bbox'])
         d = ImageDraw.Draw(im); d.rectangle([0, 0, im.width - 1, im.height - 1], outline=(255, 0, 0))
-        d.text((W - 110, 4), r['position'], fill=(255, 0, 0)); ims.append(im)
+        d.text((im.width - 110, 4), r['position'], fill=(255, 0, 0)); ims.append(im)
     S = Image.new('RGB', (W, sum(i.height for i in ims)), 'white'); y = 0
     for i in ims: S.paste(i, (0, y)); y += i.height
     S.save(f'{a.out}/strip_{p // n + 1}.png')
