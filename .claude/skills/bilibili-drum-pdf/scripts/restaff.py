@@ -20,6 +20,17 @@ o = rec['output']
 mats = json.load(open(f"{task}/{o['pdf'].rsplit('/', 1)[0]}/materials.json"))['blocks']
 
 
+def line_center(gray, W, H, y, fallback):
+    """一条五线的竖直中心（浮点，转描坐标里像素行 k 的中心就是 k）：取 ±2 行内各行横向中位灰度，
+    减去附近空白行的底色后按墨色加权平均。"""
+    c = int(round(y))
+    med = lambda k: float(np.median(gray[k, int(W * .1):int(W * .9)]))
+    bg = float(np.median([med(k) for k in range(max(0, c - 6), min(H, c + 7)) if abs(k - c) > 3]))
+    rows = list(range(max(0, c - 2), min(H, c + 3)))
+    w = [bg - med(k) if bg - med(k) > 15 else 0.0 for k in rows]
+    return sum(k * v for k, v in zip(rows, w)) / sum(w) if sum(w) else fallback
+
+
 def staves(gray, sp):
     """按已知线距做五线模板匹配：y + i*sp (i=0..4) 五处都是长横线才算一组（密集符梁不会同时满足）。"""
     W, H = gray.shape[1], gray.shape[0]
@@ -46,6 +57,9 @@ def staves(gray, sp):
                     if a - s > best[1] - best[0]: best = (s, a)
                     s = b
             spans.append(best)
+        # 画线位置改用墨色加权中心：gray<215 的计数在抗锯齿的相邻行上常和真线并列，max 取到最上面那行，
+        # 粗线就偏上约 1px，和转描里的线错开，转描出的半行残段（如第 21 小节第二线）露在下面显得变粗。
+        g = [line_center(gray, W, H, y0 + i * sp, g[i]) for i in range(5)]
         out.append((g, min(s[0] for s in spans), max(s[1] for s in spans)))
     return out
 
