@@ -59,7 +59,7 @@ description: 把 B站（或本地）动态鼓谱视频——白底多行谱面�
 
 11. **最终审阅**：`python3 $S/finish.py $W/cv.sh $W/task review --notes "实际逐页看到的内容和已知瑕疵"` → `complete`。
 
-12. **交付**：`python3 $S/finish.py $W/cv.sh $W/task deliver --name xxx-drums.pdf --thick` —— 给合并块补画五线（`restaff.py`，按原裁剪实测的线位和长度），输出 `$W/out/xxx-drums.pdf`。用**纯英文文件名**（中文/日文名在 App 里可能打不开）。有合并块时再看一眼补线后的页面。用 SendUserFile 发，`display: "attach"`。说明页数、小节范围、走的是矢量转描还是生图、已知瑕疵（具体到小节）。
+12. **交付**：`python3 $S/finish.py $W/cv.sh $W/task deliver --name '歌名.pdf' --thick` —— 给合并块补画五线（`restaff.py`，按原裁剪实测的线位和长度），输出 `$W/out/歌名.pdf`。**文件名就是歌名**（用户要求）：用原曲名原文（日文/中文/英文照原样，如 `空白とカタルシス.pdf`、`KiLLKiSS.pdf`），不加译名、作品名或 `-drums` 之类后缀，不要改成英文或罗马音；文件名里不能用的 `/ \ : * ? " < > |` 换成全角（如 `Symbol I：△.pdf`）。有合并块时再看一眼补线后的页面。用 SendUserFile 发，`display: "attach"`。说明页数、小节范围、走的是矢量转描还是生图、已知瑕疵（具体到小节）。
 
 ## 多首并行
 

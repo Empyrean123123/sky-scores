@@ -4,7 +4,7 @@
   finish.py <cv.sh> <task> export [--margin 24] [--gap 6]
                                                   设布局、导出，打印每页包含哪些谱行和预览路径
   finish.py <cv.sh> <task> review --notes "..."   实际看完全部预览后提交 review-pdf
-  finish.py <cv.sh> <task> deliver --name xxx-drums.pdf
+  finish.py <cv.sh> <task> deliver --name 歌名.pdf
                                                   补画合并块的五线（restaff.py），输出到 task 旁的 out/
 """
 import argparse, json, os, re, subprocess, tempfile
@@ -55,7 +55,7 @@ elif a.step == 'export':
     print('几何检查:', s['checks']['status'], s['checks'].get('warnings'))
     print('output_revision:', s['next'].get('output_revision'))
 elif a.step == 'deliver':
-    if not a.name: raise SystemExit('--name 必填：纯英文文件名')
+    if not a.name: raise SystemExit('--name 必填：文件名就是歌名（原文，如 空白とカタルシス.pdf）')
     out = os.path.join(os.path.dirname(os.path.abspath(a.task)), 'out'); os.makedirs(out, exist_ok=True)
     dst = os.path.join(out, a.name)
     subprocess.run(['uv', 'run', '--quiet', '--with', 'numpy', '--with', 'pillow', '--with', 'pypdf', '--with', 'reportlab',
